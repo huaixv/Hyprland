@@ -152,6 +152,14 @@ WP<CScreenshareSession> CScreenshareManager::getManagedSession(eScreenshareType 
     return session->m_session;
 }
 
+bool CScreenshareManager::isOutputBeingSSd(PHLMONITOR monitor) {
+    return std::ranges::any_of(m_pendingFrames, [monitor](const auto& f) {
+        if (!f || !f->m_session)
+            return false;
+        return (f->m_session->m_type == SHARE_MONITOR || f->m_session->m_type == SHARE_REGION) && f->m_session->m_monitor == monitor;
+    });
+}
+
 CScreenshareManager::SManagedSession::SManagedSession(UP<CScreenshareSession>&& session) : m_session(std::move(session)) {
     ;
 }
