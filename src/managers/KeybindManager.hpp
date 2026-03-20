@@ -27,11 +27,11 @@ struct SSubmap {
 
 struct SKeybind {
     std::string                     key             = "";
-    std::set<xkb_keysym_t>          sMkKeys         = {};
+    std::vector<xkb_keysym_t>       sMkKeys         = {};
     uint32_t                        keycode         = 0;
     bool                            catchAll        = false;
     uint32_t                        modmask         = 0;
-    std::set<xkb_keysym_t>          sMkMods         = {};
+    std::vector<xkb_keysym_t>       sMkMods         = {};
     std::string                     handler         = "";
     std::string                     arg             = "";
     bool                            locked          = false;
@@ -91,6 +91,10 @@ enum eMultiKeyCase : uint8_t {
 };
 
 namespace Config::Legacy {
+    class CConfigManager;
+}
+
+namespace Config::Lua {
     class CConfigManager;
 }
 
@@ -156,7 +160,7 @@ class CKeybindManager {
     std::set<xkb_keysym_t>           m_mkKeys = {};
     std::set<xkb_keysym_t>           m_mkMods = {};
     eMultiKeyCase                    mkBindMatches(const SP<SKeybind>);
-    eMultiKeyCase                    mkKeysymSetMatches(const std::set<xkb_keysym_t>, const std::set<xkb_keysym_t>);
+    eMultiKeyCase                    mkKeysymSetMatches(const std::vector<xkb_keysym_t>, const std::set<xkb_keysym_t>);
 
     bool                             handleInternalKeybinds(xkb_keysym_t);
     bool                             handleVT(xkb_keysym_t);
@@ -245,6 +249,7 @@ class CKeybindManager {
     friend class CCompositor;
     friend class CInputManager;
     friend class Config::Legacy::CConfigManager;
+    friend class Config::Lua::CConfigManager;
     friend class CWorkspace;
     friend class CPointerManager;
 };
