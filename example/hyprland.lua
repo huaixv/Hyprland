@@ -257,28 +257,12 @@ hl.bind(mainMod .. " + up",    hl.focus.direction("u"))
 hl.bind(mainMod .. " + down",  hl.focus.direction("d"))
 
 -- Switch workspaces with mainMod + [0-9]
-hl.bind(mainMod .. " + 1", hl.workspace.go(1))
-hl.bind(mainMod .. " + 2", hl.workspace.go(2))
-hl.bind(mainMod .. " + 3", hl.workspace.go(3))
-hl.bind(mainMod .. " + 4", hl.workspace.go(4))
-hl.bind(mainMod .. " + 5", hl.workspace.go(5))
-hl.bind(mainMod .. " + 6", hl.workspace.go(6))
-hl.bind(mainMod .. " + 7", hl.workspace.go(7))
-hl.bind(mainMod .. " + 8", hl.workspace.go(8))
-hl.bind(mainMod .. " + 9", hl.workspace.go(9))
-hl.bind(mainMod .. " + 0", hl.workspace.go(10))
-
 -- Move active window to a workspace with mainMod + SHIFT + [0-9]
-hl.bind(mainMod .. " + SHIFT + 1", hl.workspace.move_window(1))
-hl.bind(mainMod .. " + SHIFT + 2", hl.workspace.move_window(2))
-hl.bind(mainMod .. " + SHIFT + 3", hl.workspace.move_window(3))
-hl.bind(mainMod .. " + SHIFT + 4", hl.workspace.move_window(4))
-hl.bind(mainMod .. " + SHIFT + 5", hl.workspace.move_window(5))
-hl.bind(mainMod .. " + SHIFT + 6", hl.workspace.move_window(6))
-hl.bind(mainMod .. " + SHIFT + 7", hl.workspace.move_window(7))
-hl.bind(mainMod .. " + SHIFT + 8", hl.workspace.move_window(8))
-hl.bind(mainMod .. " + SHIFT + 9", hl.workspace.move_window(9))
-hl.bind(mainMod .. " + SHIFT + 0", hl.workspace.move_window(10))
+for i = 1, 10 do
+    local key = i % 10 -- 10 maps to key 0
+    hl.bind(mainMod .. " + " .. key,             hl.workspace.go(i))
+    hl.bind(mainMod .. " + SHIFT + " .. key,     hl.workspace.move_window(i))
+end
 
 -- Example special workspace (scratchpad)
 hl.bind(mainMod .. " + S",         hl.workspace.special("magic"))
