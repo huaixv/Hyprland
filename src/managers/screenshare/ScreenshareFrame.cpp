@@ -162,7 +162,13 @@ void CScreenshareFrame::renderMonitor() {
     if (!g_pHyprOpenGL->m_monitorRenderResources.contains(PMONITOR))
         return; // wtf?
 
-    auto TEXTURE = g_pHyprOpenGL->m_monitorRenderResources[PMONITOR].monitorMirrorFB.getTexture();
+    auto& MIRRORFB = g_pHyprOpenGL->m_monitorRenderResources[PMONITOR].monitorMirrorFB;
+    if (!MIRRORFB.isAllocated())
+        return;
+
+    auto TEXTURE = MIRRORFB.getTexture();
+    if (!TEXTURE || TEXTURE->m_texID == 0)
+        return;
 
     g_pHyprOpenGL->m_renderData.transformDamage = false;
     g_pHyprOpenGL->m_renderData.noSimplify      = true;
