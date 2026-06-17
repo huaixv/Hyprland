@@ -115,6 +115,7 @@ namespace Monitor {
         bool                        m_isUnsafeFallback = false;
 
         SP<CEventLoopTimer>         m_dpmsRetryTimer;
+        SP<CEventLoopTimer>         m_dpmsWakeRetryTimer;
 
         bool                        m_pendingFrame    = false; // if we schedule a frame during rendering, reschedule it after
         bool                        m_renderingActive = false;
@@ -159,6 +160,7 @@ namespace Monitor {
         PHLANIMVAR<float> m_dpmsBlackOpacity;
         bool              m_pendingDpmsAnimation        = false;
         int               m_pendingDpmsAnimationCounter = 0;
+        int               m_dpmsWakeRetries             = 0;
 
         PHLANIMVAR<float> m_cursorZoom;
 

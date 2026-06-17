@@ -127,6 +127,12 @@ void CMonitor::onConnect(bool noRule) {
             if (m_pendingDpmsAnimationCounter == 5) {
                 *m_dpmsBlackOpacity    = 0.F;
                 m_pendingDpmsAnimation = false;
+                m_dpmsWakeRetries      = 0;
+                if (m_dpmsWakeRetryTimer) {
+                    m_dpmsWakeRetryTimer->cancel();
+                    g_pEventLoopManager->removeTimer(m_dpmsWakeRetryTimer);
+                    m_dpmsWakeRetryTimer.reset();
+                }
             }
         }
 
@@ -2269,7 +2275,8 @@ bool CMonitor::shouldUseSoftwareCursors() {
 
 void CMonitor::setDPMS(bool on) {
     // Don't trigger animation if the target state is the same
-    if (!shouldApplyDPMSState(on, m_dpmsStatus, m_output->state->state().enabled))
+    const auto DPMSACTION = dpmsActionFor(on, m_dpmsStatus, m_output->state->state().enabled, m_pendingDpmsAnimation);
+    if (DPMSACTION == eDPMSAction::NONE)
         return;
 
     if (m_dpmsStatus != on) {
@@ -2283,9 +2290,44 @@ void CMonitor::setDPMS(bool on) {
         m_dpmsBlackOpacity->setValueAndWarp(1.F);
         m_pendingDpmsAnimation        = true;
         m_pendingDpmsAnimationCounter = 0;
+        m_dpmsWakeRetries             = 0;
+        if (DPMSACTION == eDPMSAction::CYCLE)
+            commitDPMSState(false);
         commitDPMSState(true);
+        m_dpmsWakeRetryTimer = makeShared<CEventLoopTimer>(
+            std::chrono::milliseconds(1000),
+            [this, self = m_self](SP<CEventLoopTimer> s, void* d) {
+                if (!self)
+                    return;
+
+                if (!m_dpmsStatus || !m_pendingDpmsAnimation) {
+                    m_dpmsWakeRetryTimer.reset();
+                    return;
+                }
+
+                if (m_dpmsWakeRetries >= 1) {
+                    Log::logger->log(Log::ERR, "Output {} did not present after DPMS wake retry", m_name);
+                    m_dpmsWakeRetryTimer.reset();
+                    return;
+                }
+
+                m_dpmsWakeRetries++;
+                Log::logger->log(Log::WARN, "Output {} did not present after DPMS wake, cycling DPMS", m_name);
+                commitDPMSState(false);
+                commitDPMSState(true);
+                s->updateTimeout(std::chrono::milliseconds(1000));
+            },
+            nullptr);
+        g_pEventLoopManager->addTimer(m_dpmsWakeRetryTimer);
     } else {
         // disable the monitor. Begin the animation, then do dpms on its end.
+        m_pendingDpmsAnimation = false;
+        m_dpmsWakeRetries      = 0;
+        if (m_dpmsWakeRetryTimer) {
+            m_dpmsWakeRetryTimer->cancel();
+            g_pEventLoopManager->removeTimer(m_dpmsWakeRetryTimer);
+            m_dpmsWakeRetryTimer.reset();
+        }
         m_dpmsBlackOpacity->setCallbackOnEnd(nullptr);
         m_dpmsBlackOpacity->setValueAndWarp(0.F);
         *m_dpmsBlackOpacity = 1.F;

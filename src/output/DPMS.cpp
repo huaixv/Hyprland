@@ -1,8 +1,21 @@
 #include "DPMS.hpp"
 
-bool Monitor::shouldApplyDPMSState(bool requestedOn, bool logicalOn, bool outputEnabled) {
+Monitor::eDPMSAction Monitor::dpmsActionFor(bool requestedOn, bool logicalOn, bool outputEnabled, bool wakePending) {
     if (logicalOn != requestedOn)
-        return true;
+        return eDPMSAction::COMMIT;
 
-    return requestedOn && !outputEnabled;
+    if (!requestedOn)
+        return eDPMSAction::NONE;
+
+    if (!outputEnabled)
+        return eDPMSAction::COMMIT;
+
+    if (wakePending)
+        return eDPMSAction::CYCLE;
+
+    return eDPMSAction::NONE;
+}
+
+bool Monitor::shouldApplyDPMSState(bool requestedOn, bool logicalOn, bool outputEnabled, bool wakePending) {
+    return dpmsActionFor(requestedOn, logicalOn, outputEnabled, wakePending) != eDPMSAction::NONE;
 }
