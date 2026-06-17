@@ -44,6 +44,7 @@
 #include "../event/EventBus.hpp"
 #include "../helpers/Drm.hpp"
 #include "MonitorFrameScheduler.hpp"
+#include "DPMS.hpp"
 #include <aquamarine/output/Output.hpp>
 #include "debug/log/Logger.hpp"
 #include "notification/NotificationOverlay.hpp"
@@ -2268,11 +2269,13 @@ bool CMonitor::shouldUseSoftwareCursors() {
 
 void CMonitor::setDPMS(bool on) {
     // Don't trigger animation if the target state is the same
-    if (m_dpmsStatus == on)
+    if (!shouldApplyDPMSState(on, m_dpmsStatus, m_output->state->state().enabled))
         return;
 
-    m_dpmsStatus = on;
-    m_events.dpmsChanged.emit();
+    if (m_dpmsStatus != on) {
+        m_dpmsStatus = on;
+        m_events.dpmsChanged.emit();
+    }
 
     if (on) {
         // enable the monitor. Wait for the frame to be presented, then begin animation
